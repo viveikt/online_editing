@@ -31,16 +31,28 @@ class OnlineEdit
 
   def checkout
       clone = system( "svn export #{@path} tmp/" )
-      create_process unless false
+      edit_file unless false
   end
 
-  def create_process
-    file_time_before_opening = File.mtime("tmp/#{@file}")
-    puts file_time_before_opening
-    open_file = system( "start tmp/#{@file}" )
-    file_time_before_closing = File.mtime("tmp/#{@file}")
-    puts file_time_before_closing
-    # This doesn't work. create Process as planned
+  def edit_file
+    before = File.mtime("tmp/#{@file}")
+    open_file = system("start /wait tmp/#{@file}")
+    after = File.mtime("tmp/#{@file}")
+    if before != after
+      commit
+    else
+      exit
+    end
+    # Are you sure you want to create a process for this?
+  end
+
+  def commit
+    commit_file = system("svn commit -m 'test message' /wait tmp/#{@file}")
+    puts commit_file
+  end
+
+  def exit
+    puts "exit"
   end
 
 end
