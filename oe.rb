@@ -2,12 +2,14 @@ require 'rubygems'
 require 'win32/daemon'
 include Win32
 
-class TestDaemon < Daemon
+class ProcessDaemon < Daemon
   def service_main
     log 'started'
     while running?
       log 'running'
       sleep 10
+      a = "test string"
+      debugger
     end
   end
 
@@ -21,4 +23,4 @@ class TestDaemon < Daemon
   end
 end
 
-TestDaemon.mainloop
+ProcessDaemon.mainloop
