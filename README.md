@@ -15,10 +15,11 @@ Steps I followed:
 
 $ ruby register.rb
 
-C:/Ruby193/lib/ruby/gems/1.9.1/gems/win32-service-0.8.3/lib/win32/windows/helper.rb:36:in `raise_windows_error': The service did not respond to the start or control request in a timely fashi
-n. - StartService: The service did not respond to the start or control request in a timely fashion. (SystemCallError)
-        from C:/Ruby193/lib/ruby/gems/1.9.1/gems/win32-service-0.8.3/lib/win32/service.rb:723:in `start'
-        from register.rb:18:in `<main>'
+C:/Ruby193/lib/ruby/gems/1.9.1/gems/win32-service-0.8.3/lib/win32/windows/helper.rb:36:in 
+`raise_windows_error': The service did not respond to the start or control request in a timely fashion. 
+- StartService: The service did not respond to the start or control request in a timely fashion. (SystemCallError)
+from C:/Ruby193/lib/ruby/gems/1.9.1/gems/win32-service-0.8.3/lib/win32/service.rb:723:in `start'
+from register.rb:18:in `<main>'
 
 OR 
 
