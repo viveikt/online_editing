@@ -4,6 +4,7 @@
 # organize code it looks to messy now
 
 require 'rubygems'
+require 'open-uri'
 
 class OnlineEdit
 
@@ -13,10 +14,22 @@ class OnlineEdit
     @repo_name = repo_name
   end
 
+  def online? #use this method everywhere necessary.
+    begin
+      true if open("http://www.google.com/")
+    rescue
+      false
+    end
+  end
+
   def create_tmp_folder
-    create = system( 'mkdir tmp' ) #Not so efficient check auto temp folder creation and deletion after process completes. (http://ruby-doc.org/stdlib-2.1.0/libdoc/tmpdir/rdoc/index.html)
-    unless false
-      checkout
+    if online?
+      create = system( 'mkdir tmp' ) #Not so efficient check auto temp folder creation and deletion after process completes. (http://ruby-doc.org/stdlib-2.1.0/libdoc/tmpdir/rdoc/index.html)
+      unless false
+        checkout
+      end
+    else
+      exit
     end
   end
 
@@ -53,6 +66,7 @@ class OnlineEdit
 
 end
 
+# this is just a test run, 3 parameters will be passed to the file - path,file&repository name
 init = OnlineEdit.new('https://tstpd.pdprojects.prevas.com/svn/aef012.documents','README.txt','aef012.documents')
 init.create_tmp_folder
 
