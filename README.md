@@ -25,8 +25,7 @@ $ sc start testservice
 
 NOTES:
 
-* svn export url_to_repo is used to checkout a single file
-  ex: svn export https://tstpd.pdprojects.prevas.com/svn/aef012.documents/README.txt
+Add
   
 Requirement:
 
