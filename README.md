@@ -27,3 +27,21 @@ NOTES:
 
 * svn export url_to_repo is used to checkout a single file
   ex: svn export https://tstpd.pdprojects.prevas.com/svn/aef012.documents/README.txt
+  
+Requirement:
+
+1. create a tmp folder some where
+2. checkout a file from a repository to that location
+3. create a process
+4. open the file with its default editor
+5. check for the below commands
+def load_notepad
+pid = Process.spawn("notepad.exe")
+puts "before wait"
+Process.wait pid
+puts "after wait"
+end
+6. If response code received and file is not altered then exit
+else commit the file back to the server with a default commit message
+
+
