@@ -13,7 +13,27 @@ Plugin Dependencies:
 
 NOTES:
 
-How to Add the URL handler:(mention here)
+How to Add the URL handler:
+
+Start -> Run -> regedit
+New -> key ->
+podiumonlineedit -> Default -> Podium URI
+shell
+open
+command -> Default -> path_to_your_repository\online_editing\start.bat %1 %2 %3 %4
+
+Different ways to run file (For Development and Production)
+
+Development:
+
+init = OnlineEdit.new('https://tstpd.pdprojects.prevas.com/svn/aef012.documents','README.txt','aef012.documents')
+init.create_tmp_folder
+
+Production:
+podiumonlineedit:?url=https://tstpd.pdprojects.prevas.com/svn/aef012.documents=README.txt=aef012.documents
+podiumonlineedit:?url=https://oe.dev1.prevas.com/svn/t2811p.documents=test.doc=t2811p.documents
+podiumonlineedit:?url=https://oe.dev1.prevas.com/svn/t2811p.documents=/trunk/G%20-%20Administration/t2811pg001%20Checklist%20Completion%20meeting.doc=t2811p.documents
+
 
 Requirements:
 
