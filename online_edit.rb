@@ -6,9 +6,6 @@
 require 'rubygems'
 require 'open-uri'
 #!/usr/bin/env ruby
-#ARGV.each do|a|
-  #puts "Argument: #{a}"
-#end
 
 class OnlineEdit
 
@@ -65,6 +62,7 @@ class OnlineEdit
   end
 
   def exit
+    #abort("exit")
     puts 'exit'
   end
 
@@ -73,7 +71,10 @@ end
 # this is just a test run, 3 parameters will be passed to the file - path,file&repository name
 #init = OnlineEdit.new('https://tstpd.pdprojects.prevas.com/svn/aef012.documents','README.txt','aef012.documents')
 #init.create_tmp_folder
+
 #podiumonlineedit:?url=https://tstpd.pdprojects.prevas.com/svn/aef012.documents=README.txt=aef012.documents
+#podiumonlineedit:?url=https://oe.dev1.prevas.com/svn/t2811p.documents=test.doc=t2811p.documents
+#podiumonlineedit:?url=https://oe.dev1.prevas.com/svn/t2811p.documents=/trunk/G%20-%20Administration/t2811pg001%20Checklist%20Completion%20meeting.doc=t2811p.documents
 
 init = OnlineEdit.new(ARGV[1].to_s,ARGV[2].to_s,ARGV[3].to_s)
 init.create_tmp_folder
