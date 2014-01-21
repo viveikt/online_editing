@@ -1,8 +1,3 @@
-# remove all unnecessary variables.
-# add dynamic tmp folder creation, navigation & deletion after end.
-# check using svn bindings for ruby if it can help.
-# organize code it looks to messy now
-
 require 'rubygems'
 require 'open-uri'
 require 'securerandom'
@@ -11,9 +6,8 @@ require 'tmpdir.rb'
 #!/usr/bin/env ruby
 
 class OnlineEdit
-
-  def initialize(path,file)
-    @path = path
+  def initialize(svn_path,file)
+    @svn_path = svn_path
     @file = file.gsub('%20',' ')
   end
 
@@ -35,7 +29,7 @@ class OnlineEdit
   def checkout
     @nav = SecureRandom.random_number
     Dir.chdir("#{@local_path}") do
-      clone = system ( "svn co --depth=empty #{@path} #{@nav} & cd #{@nav} & svn up \"#{@file}\"" )
+      clone = system ( "svn co --depth=empty #{@svn_path} #{@nav} & cd #{@nav} & svn up \"#{@file}\"" )
     end
     edit_file
   end
@@ -66,7 +60,6 @@ class OnlineEdit
     #abort("exit")
     puts 'exit'
   end
-
 end
 
 init = OnlineEdit.new(ARGV[1].to_s,ARGV[2].to_s)
