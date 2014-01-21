@@ -36,7 +36,7 @@ class OnlineEdit
 
   def edit_file
     before = File.mtime("#{@local_path}/#{@nav}/#{@file}")
-    system( "start /wait #{@local_path}/#{@nav}/#{@file}" )
+    system( "start \"\" /wait \"#{@local_path}/#{@nav}/#{@file}\"" )
     after = File.mtime("#{@local_path}/#{@nav}/#{@file}")
     if before != after
       commit
@@ -47,7 +47,7 @@ class OnlineEdit
 
   def commit
     default_message = 'default message'
-    system( "svn commit -m \"#{default_message}\" #{@local_path}/#{@nav}/#{@file}" )
+    system( "svn commit -m \"#{default_message}\" \"#{@local_path}/#{@nav}/#{@file}\"" )
     remove_tmp_dir
   end
 

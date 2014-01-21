@@ -30,9 +30,11 @@ init = OnlineEdit.new('https://tstpd.pdprojects.prevas.com/svn/aef012.documents'
 init.create_tmp_folder
 
 Production:
+Working URL:
 podium:?url=https://tstpd.pdprojects.prevas.com/svn/aef012.documents=README.txt=aef012.documents
 podium:?url=https://oe.dev1.prevas.com/svn/t2811p.documents=test.doc=t2811p.documents
-podium:?url=https://oe.dev1.prevas.com/svn/t2811p.documents/trunk/G%20-%20Administration=t2811pg001%20Checklist%20Completion%20meeting.doc=t2811p.documents
+Not working URL:
+podium:?url=https://oe.dev1.prevas.com/svn/t2811p.documents/trunk/G%20-%20Administration=t2811pg001%20Checklist%20Completion%20meeting.doc
 
 Requirements:
 
