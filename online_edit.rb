@@ -5,17 +5,20 @@
 
 require 'rubygems'
 require 'open-uri'
+require 'securerandom'
+require 'debugger'
+require 'tmpdir.rb'
 #!/usr/bin/env ruby
 
 class OnlineEdit
 
-  def initialize(path,file,repo_name)
+  def initialize(path,file)
     @path = path
-    @file = file
-    @repo_name = repo_name
+    @file = file.gsub('%20',' ')
   end
 
-  def online? #use this method everywhere necessary.
+  #Use if necessary
+  def online?
     begin
       true if open("http://www.google.com/")
     rescue
@@ -23,26 +26,24 @@ class OnlineEdit
     end
   end
 
-  def create_tmp_folder
-    if online?
-      create = system( 'mkdir tmp' ) #Not so efficient check auto temp folder creation and deletion after process completes. (http://ruby-doc.org/stdlib-2.1.0/libdoc/tmpdir/rdoc/index.html)
-      unless false
-        checkout
-      end
-    else
-      exit
-    end
+  def create_tmp_dir
+    @local_path = File.expand_path "#{Dir.tmpdir}/#{Time.now.to_i}#{rand(1000)}/"
+    FileUtils.mkdir_p @local_path
+    checkout
   end
 
   def checkout
-    clone = system( "cd tmp & svn co --depth=empty #{@path} & cd #{@repo_name} & svn up #{@file}" )
-    edit_file unless false
+    @nav = SecureRandom.random_number
+    Dir.chdir("#{@local_path}") do
+      clone = system ( "svn co --depth=empty #{@path} #{@nav} & cd #{@nav} & svn up \"#{@file}\"" )
+    end
+    edit_file
   end
 
   def edit_file
-    before = File.mtime("tmp/#{@repo_name}/#{@file}")
-    open_file = system( "start /wait tmp/#{@repo_name}/#{@file}" )
-    after = File.mtime("tmp/#{@repo_name}/#{@file}")
+    before = File.mtime("#{@local_path}/#{@nav}/#{@file}")
+    open_file = system( "start /wait #{@local_path}/#{@nav}/#{@file}" )
+    after = File.mtime("#{@local_path}/#{@nav}/#{@file}")
     if before != after
       commit
     else
@@ -53,7 +54,7 @@ class OnlineEdit
 
   def commit
     default_message = 'default message'
-    commit_file = system( "svn commit -m \"#{default_message}\" tmp\\#{@repo_name}\\#{@file}" )
+    commit_file = system( "svn commit -m \"#{default_message}\" #{@local_path}/#{@nav}/#{@file}" )
     remove_tmp_folder
   end
 
@@ -68,5 +69,5 @@ class OnlineEdit
 
 end
 
-init = OnlineEdit.new(ARGV[1].to_s,ARGV[2].to_s,ARGV[3].to_s)
-init.create_tmp_folder
+init = OnlineEdit.new(ARGV[1].to_s,ARGV[2].to_s)
+init.create_tmp_dir
