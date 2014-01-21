@@ -29,31 +29,30 @@ class OnlineEdit
   def checkout
     @nav = SecureRandom.random_number
     Dir.chdir("#{@local_path}") do
-      clone = system ( "svn co --depth=empty #{@svn_path} #{@nav} & cd #{@nav} & svn up \"#{@file}\"" )
+      system ( "svn co --depth=empty #{@svn_path} #{@nav} & cd #{@nav} & svn up \"#{@file}\"" )
     end
     edit_file
   end
 
   def edit_file
     before = File.mtime("#{@local_path}/#{@nav}/#{@file}")
-    open_file = system( "start /wait #{@local_path}/#{@nav}/#{@file}" )
+    system( "start /wait #{@local_path}/#{@nav}/#{@file}" )
     after = File.mtime("#{@local_path}/#{@nav}/#{@file}")
     if before != after
       commit
     else
       exit
     end
-    # Are you sure you want to create a process for this?
   end
 
   def commit
     default_message = 'default message'
-    commit_file = system( "svn commit -m \"#{default_message}\" #{@local_path}/#{@nav}/#{@file}" )
-    remove_tmp_folder
+    system( "svn commit -m \"#{default_message}\" #{@local_path}/#{@nav}/#{@file}" )
+    remove_tmp_dir
   end
 
-  def remove_tmp_folder
-    remove_dir = system( 'rmdir tmp /s /q' )
+  def remove_tmp_dir
+    FileUtils.rm_rf( @local_path ) if File.exists?( @local_path )
   end
 
   def exit
