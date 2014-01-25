@@ -1,7 +1,6 @@
 require 'rubygems'
 require 'open-uri'
 require 'securerandom'
-require 'debugger'
 require 'tmpdir.rb'
 #!/usr/bin/env ruby
 
