@@ -2,6 +2,7 @@ require 'rubygems'
 require 'open-uri'
 require 'securerandom'
 require 'tmpdir.rb'
+require 'debugger'
 #!/usr/bin/env ruby
 
 class OnlineEdit
@@ -34,9 +35,12 @@ class OnlineEdit
   end
 
   def edit_file
-    before = File.mtime("#{@local_path}/#{@nav}/#{@file}")
+    before = IO.read("#{@local_path}/#{@nav}/#{@file}", {mode: 'rb'})
     system( "start \"\" /wait \"#{@local_path}/#{@nav}/#{@file}\"" )
-    after = File.mtime("#{@local_path}/#{@nav}/#{@file}")
+    after = IO.read("#{@local_path}/#{@nav}/#{@file}", {mode: 'rb'})
+    #before = File.mtime("#{@local_path}/#{@nav}/#{@file}")
+    #system( "start \"\" /wait \"#{@local_path}/#{@nav}/#{@file}\"" )
+    #after = File.mtime("#{@local_path}/#{@nav}/#{@file}")
     if before != after
       commit
     else
