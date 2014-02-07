@@ -2,12 +2,13 @@ require 'rubygems'
 require 'open-uri'
 require 'securerandom'
 require 'tmpdir.rb'
+require 'uri'
 #!/usr/bin/env ruby
 
 class OnlineEdit
   def initialize(svn_path,file)
     @svn_path = svn_path
-    @file = file.gsub('%20',' ')
+    @file = URI.decode(file)
   end
 
   #Use if necessary
@@ -34,12 +35,9 @@ class OnlineEdit
   end
 
   def edit_file
-    before = IO.read("#{@local_path}/#{@nav}/#{@file}", {mode: 'rb'})
+    before = File.mtime("#{@local_path}/#{@nav}/#{@file}")
     system( "start \"\" /wait \"#{@local_path}/#{@nav}/#{@file}\"" )
-    after = IO.read("#{@local_path}/#{@nav}/#{@file}", {mode: 'rb'})
-    #before = File.mtime("#{@local_path}/#{@nav}/#{@file}")
-    #system( "start \"\" /wait \"#{@local_path}/#{@nav}/#{@file}\"" )
-    #after = File.mtime("#{@local_path}/#{@nav}/#{@file}")
+    after = File.mtime("#{@local_path}/#{@nav}/#{@file}")
     if before != after
       commit
     else
