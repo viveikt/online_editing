@@ -30,6 +30,7 @@ class OnlineEdit
     @nav = SecureRandom.random_number
     Dir.chdir("#{@local_path}") do
       system ( "svn co --depth=empty #{@svn_path} #{@nav} & cd #{@nav} & svn up \"#{@file}\"" )
+      system ( "svn lock #{@svn_path}/#{@file}")
     end
     edit_file
   end
@@ -41,11 +42,13 @@ class OnlineEdit
     if before != after
       commit
     else
-      exit
+      system ( "svn unlock #{@svn_path}/#{@file}")
+      abort("File was not modified")
     end
   end
 
   def commit
+    system ( "svn unlock #{@svn_path}/#{@file}")
     default_message = 'default message'
     system( "svn commit -m \"#{default_message}\" \"#{@local_path}/#{@nav}/#{@file}\"" )
     remove_tmp_dir
@@ -55,10 +58,6 @@ class OnlineEdit
     FileUtils.rm_rf( @local_path ) if File.exists?( @local_path )
   end
 
-  def exit
-    #abort("exit")
-    puts 'exit'
-  end
 end
 
 init = OnlineEdit.new(ARGV[1].to_s,ARGV[2].to_s)
