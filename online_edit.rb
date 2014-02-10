@@ -37,9 +37,9 @@ class OnlineEdit
   end
 
   def edit_file
-    before = File.mtime("#{@local_path}/#{@nav}/#{@file}")
+    before = File.mtime("#{@local_path}/#{@nav}/#{@file}") rescue nil
     system( "start \"\" /wait \"#{@local_path}/#{@nav}/#{@file}\"" )
-    after = File.mtime("#{@local_path}/#{@nav}/#{@file}")
+    after = File.mtime("#{@local_path}/#{@nav}/#{@file}") rescue nil
     if before != after
       unlock
       commit
@@ -60,12 +60,12 @@ class OnlineEdit
   def commit
     system ( "svn unlock #{@svn_path}/#{@file}")
     default_message = 'default message'
-    system( "svn commit -m \"#{default_message}\" \"#{@local_path}/#{@nav}/#{@file}\"" )
+    system( "svn commit -m \"#{default_message}\" \"#{@local_path}/#{@nav}/#{@file}\"" ) 
     remove_tmp_dir
   end
 
   def remove_tmp_dir
-    FileUtils.rm_rf( @local_path ) if File.exists?( @local_path )
+    FileUtils.rm_rf( @local_path ) if File.exists?( @local_path ) rescue nil
   end
 
 end
