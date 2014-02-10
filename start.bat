@@ -1,4 +1,4 @@
-ruby C:\Users\invith\Desktop\test\online_editing\online_edit.rb %1 %2 %3
+ruby "C:\Prevas\Applications\Podium Online Editing\online_edit.rb" %1 %2 %3
 
 
 

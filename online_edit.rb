@@ -3,12 +3,14 @@ require 'open-uri'
 require 'securerandom'
 require 'tmpdir.rb'
 require 'uri'
+require 'debugger'
 #!/usr/bin/env ruby
 
 class OnlineEdit
   def initialize(svn_path,file)
     @svn_path = svn_path
     @file = URI.decode(file)
+    @encoded_file = file.gsub(' ','%20')
   end
 
   #Use if necessary
@@ -30,7 +32,7 @@ class OnlineEdit
     @nav = SecureRandom.random_number
     Dir.chdir("#{@local_path}") do
       system ( "svn co --depth=empty #{@svn_path} #{@nav} & cd #{@nav} & svn up \"#{@file}\"" )
-      system ( "svn lock #{@svn_path}/#{@file}")
+      lock
     end
     edit_file
   end
@@ -40,11 +42,20 @@ class OnlineEdit
     system( "start \"\" /wait \"#{@local_path}/#{@nav}/#{@file}\"" )
     after = File.mtime("#{@local_path}/#{@nav}/#{@file}")
     if before != after
+      unlock
       commit
     else
-      system ( "svn unlock #{@svn_path}/#{@file}")
+      unlock
       abort("File was not modified")
     end
+  end
+  
+  def lock
+    system ( "svn lock #{@svn_path}/#{@encoded_file}")  
+  end
+  
+  def unlock
+    system ( "svn unlock #{@svn_path}/#{@encoded_file}")   
   end
 
   def commit
