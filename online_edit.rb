@@ -3,7 +3,6 @@ require 'open-uri'
 require 'securerandom'
 require 'tmpdir.rb'
 require 'uri'
-require 'debugger'
 #!/usr/bin/env ruby
 
 class OnlineEdit
