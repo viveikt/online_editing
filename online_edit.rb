@@ -1,45 +1,130 @@
+#!/usr/bin/env ruby
 require 'rubygems'
 require 'open-uri'
 require 'securerandom'
 require 'tmpdir.rb'
 require 'uri'
-#!/usr/bin/env ruby
+require 'open3'
+require 'fox16'
+include Fox
 
-class OnlineEdit
-  def initialize(svn_path,file)
-    @svn_path = svn_path
-    @file = URI.decode(file)
-    @encoded_file = file.gsub(' ','%20')
+require 'debugger'
+
+class DialogBox < FXMainWindow
+  def initialize(app)
+    super(app, "Podium Online Editing", :opts => DECOR_ALL, :width => 1200, :height => 100)
+    # Tooltip
+    FXToolTip.new(getApp())
+    # Contents
+    contents = FXHorizontalFrame.new(self,
+      LAYOUT_SIDE_TOP|FRAME_NONE|LAYOUT_FILL_X|LAYOUT_FILL_Y|PACK_UNIFORM_WIDTH)
+    FXLabel.new(contents, "The file you are trying to edit is locked by a different user, what would you like to do?", nil, LAYOUT_SIDE_TOP | JUSTIFY_LEFT)
+    # Open as read only button
+    open_as_read_only = FXButton.new(contents,
+      "&Open as read only\tOpen the file as read only, the file will not be committed",
+      :opts => FRAME_RAISED|FRAME_THICK|LAYOUT_BOTTOM |LAYOUT_FIX_WIDTH|LAYOUT_FIX_HEIGHT,
+      :width => 150, :height => 50)
+    open_as_read_only.connect(SEL_COMMAND, method(:read_only))
+    # Force Unlock button
+    force_unlock = FXButton.new(contents,
+      "&Force Unlock\tForce unlock file by breaking the lock and taking control",
+       :opts => FRAME_RAISED|FRAME_THICK|LAYOUT_BOTTOM |LAYOUT_FIX_WIDTH|LAYOUT_FIX_HEIGHT,
+      :width => 150, :height => 50)
+    force_unlock.connect(SEL_COMMAND, method(:force_unlock))
+    # Cancel button
+    cancel_button = FXButton.new(contents,
+      "&Cancel\tExit process",
+       :opts => FRAME_RAISED|FRAME_THICK|LAYOUT_BOTTOM |LAYOUT_FIX_WIDTH|LAYOUT_FIX_HEIGHT,
+      :width => 150, :height => 50)
+    cancel_button.connect(SEL_COMMAND, method(:cancel_button))
+    # Respond to window close
+    self.connect(SEL_CLOSE) { method(:cancel_button) }
   end
 
-  #Use if necessary
+  # Open the file as read only
+  def read_only(sender, sel, ptr)
+    debugger
+    self.close
+    ro = OnlineEdit.new(ARGV[1].to_s,ARGV[2].to_s)
+    ro.read_only_checkout
+    exit
+  end
+
+  # Open file by unlocking first
+  def force_unlock(sender, sel, ptr)
+    self.close
+    force_ulk = OnlineEdit.new(ARGV[1].to_s,ARGV[2].to_s)
+    force_ulk.unlock_force
+    exit
+  end
+
+  # Cancel button which terminates the program
+  def cancel_button(sender, sel, ptr)
+    exit
+  end
+
+  # Start execution
+  def create
+    super
+    show(PLACEMENT_SCREEN)
+  end
+end
+
+
+class OnlineEdit
+  def start
+    debugger
+    create_tmp_dir
+  end
+
+  # Initialize the class from the arguments received from podium web application
+  def initialize(svn_path,file)
+    $svn_path = svn_path
+    $file = URI.decode(file)
+    $encoded_file = file.gsub(' ','%20')
+  end;
+
+  # Check if the user is online. Not currently used
   def online?
     begin
       true if open("http://www.google.com/")
     rescue
-      false
+    false
     end
   end
 
+  # Create a temp directory and checkout the file
   def create_tmp_dir
-    @local_path = File.expand_path "#{Dir.tmpdir}/#{Time.now.to_i}#{rand(1000)}/" 
-    FileUtils.mkdir_p @local_path 
+    $local_path = File.expand_path "#{Dir.tmpdir}/#{Time.now.to_i}#{rand(1000)}/"
+    FileUtils.mkdir_p $local_path
     checkout
   end
 
+  # Checkout the svn file and move to edit method
   def checkout
-    @nav = SecureRandom.random_number 
-    Dir.chdir("#{@local_path}") do
-      system ( "svn co --depth=empty #{@svn_path} #{@nav} & cd #{@nav} & svn up \"#{@file}\"" ) 
+    $nav = SecureRandom.random_number
+    Dir.chdir("#{$local_path}") do
+      system ( "svn co --depth=empty #{$svn_path} #{$nav} & cd #{$nav} & svn up \"#{$file}\"" )
       lock
     end
     edit_file
   end
 
+  # This method is used only if the user selects read only if the file was locked
+  def read_only_checkout
+    $nav = SecureRandom.random_number
+    Dir.chdir("#{$local_path}") do
+      system ( "svn co --depth=empty #{$svn_path} #{$nav} & cd #{$nav} & svn up \"#{$file}\"" )
+    end
+    system( "start \"\" \"#{$local_path}/#{$nav}/#{$file}\"" )  
+    exit
+  end
+
+  # Edit the file by opening the file in the default editor and check for changes in the file
   def edit_file
-    before = File.mtime("#{@local_path}/#{@nav}/#{@file}") 
-    system( "start \"\" /wait \"#{@local_path}/#{@nav}/#{@file}\"" ) 
-    after = File.mtime("#{@local_path}/#{@nav}/#{@file}") 
+    before = File.mtime("#{$local_path}/#{$nav}/#{$file}")
+    system( "start \"\" /wait \"#{$local_path}/#{$nav}/#{$file}\"" )
+    after = File.mtime("#{$local_path}/#{$nav}/#{$file}")
     if before != after
       unlock
       commit
@@ -48,27 +133,66 @@ class OnlineEdit
       abort("File was not modified")
     end
   end
-  
+
+  # Initially check if the file is locked. If locked then open the UI with 3 options else lock the file 
   def lock
-    system ( "svn lock #{@svn_path}/#{@encoded_file}")   
-  end
-  
-  def unlock
-    system ( "svn unlock #{@svn_path}/#{@encoded_file}")   
+    check_locked = %x(svn status -u "#{$local_path}/#{$nav}/#{$file}\" 2>&1).split(' ').first
+    if check_locked == "O"
+      run_options
+    else
+      system ( "svn lock #{$svn_path}/#{$encoded_file}")
+    end
   end
 
+  # Unlock file method, used after users input. This will run at the end of the program at any cost 
+  def unlock
+    system ( "svn unlock #{$svn_path}/#{$encoded_file}")
+  end
+
+  # Used only if the user selects force unlock from the UI and then it locks again for further editing
+  def unlock_force
+    system ( "svn unlock --force #{$svn_path}/#{$encoded_file}")
+    lock_again
+  end
+
+  # Used only when force unlock is selected. Locks the file again and edits the file
+  def lock_again
+    system ( "svn lock #{$svn_path}/#{$encoded_file}")
+    edit_file
+  end
+
+  # After changes found in the file the file is committed with a default message
   def commit
-    system ( "svn unlock #{@svn_path}/#{@file}") 
+    system ( "svn unlock #{$svn_path}/#{$file}")
     default_message = 'default message'
-    system( "svn commit -m \"#{default_message}\" \"#{@local_path}/#{@nav}/#{@file}\"" ) 
+    system( "svn commit -m \"#{default_message}\" \"#{$local_path}/#{$nav}/#{$file}\"" )
     remove_tmp_dir
   end
 
+  # Temp folder and file should be deleted on program exit
   def remove_tmp_dir
-    FileUtils.rm_rf( @local_path ) if File.exists?( @local_path ) 
+    FileUtils.rm_rf( $local_path ) if File.exists?( $local_path )
+  end
+
+  # Dialogbox method
+  def run_options
+    # Make an application
+    application = FXApp.new("Dialog", "OnlineEditing")
+    # Construct the application's main window
+    DialogBox.new(application)
+    # Create the application
+    application.create
+    # Run the application
+    application.run
   end
 
 end
 
 init = OnlineEdit.new(ARGV[1].to_s,ARGV[2].to_s)
-init.create_tmp_dir unless defined?(Ocra)
+init.start unless defined?(Ocra)
+
+# TO DO: 
+# Add ensure for all the methods which needs to be executed during the program exit
+# Use encapsulation (private/public/protected) use it like symbols --> private :this_is_private, :this_is_also_private 
+# Use nested class instead of 2 different class
+
