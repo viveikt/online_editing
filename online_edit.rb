@@ -53,7 +53,7 @@ class DialogBox < FXMainWindow
 
   # Cancel button which terminates the program
   def cancel_button(sender, sel, ptr)
-    exit
+    construct('cancel_button')
   end
 
   # Build class
@@ -64,6 +64,8 @@ class DialogBox < FXMainWindow
       init.read_only_checkout
     elsif args == 'force_unlock'
       init.unlock_force
+    elsif args == 'cancel_button'
+      init.remove_tmp_dir        
     end
     exit
   end
@@ -77,6 +79,7 @@ end
 
 
 class OnlineEdit
+
   def start
     create_tmp_dir
   end
@@ -129,19 +132,19 @@ class OnlineEdit
     before = File.mtime("#{$local_path}/#{$nav}/#{$file}")
     system( "start \"\" /wait \"#{$local_path}/#{$nav}/#{$file}\"" )
     after = File.mtime("#{$local_path}/#{$nav}/#{$file}")
+    unlock
     if before != after
-      unlock
       commit
     else
-      unlock
-      abort("File was not modified")
+      puts "File was not modified"
     end
+    remove_tmp_dir
   end
 
   # Initially check if the file is locked. If locked then open the UI with 3 options else lock the file 
   def lock
     check_locked = %x(svn status -u "#{$local_path}/#{$nav}/#{$file}\" 2>&1).split(' ').first
-    if check_locked == "O"
+    if check_locked == "O" #File already locked 
       run_options
     else
       system ( "svn lock #{$svn_path}/#{$encoded_file}")
@@ -167,10 +170,8 @@ class OnlineEdit
 
   # After changes found in the file the file is committed with a default message
   def commit
-    system ( "svn unlock #{$svn_path}/#{$file}")
     default_message = 'Edited online using podium editor'
     system( "svn commit -m \"#{default_message}\" \"#{$local_path}/#{$nav}/#{$file}\"" )
-    remove_tmp_dir
   end
 
   # Temp folder and file should be deleted on program exit
@@ -190,6 +191,7 @@ class OnlineEdit
     application.run
   end
 
+  private :create_tmp_dir, :checkout , :edit_file , :lock , :unlock , :lock_again , :commit, :run_options
 end
 
 init = OnlineEdit.new(ARGV[1].to_s,ARGV[2].to_s)
@@ -197,6 +199,6 @@ init.start unless defined?(Ocra)
 
 # TO DO: 
 # Add ensure for all the methods which needs to be executed during the program exit
-# Use encapsulation (private/public/protected) use it like symbols --> private :this_is_private, :this_is_also_private 
-# Use nested class instead of 2 different class or use modules
+# DRY the code 
+# Make seperate method for all system commands
 
