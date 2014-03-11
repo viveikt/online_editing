@@ -107,11 +107,32 @@ class OnlineEdit
     checkout
   end
 
+  # SVN / Console commands
+  def svn_command(cmd)
+    case cmd
+      when 'svn_checkout'
+        system ( "svn co --depth=empty #{$svn_path} #{$nav} & cd #{$nav} & svn up \"#{$file}\"" )
+      when 'start_file_exit'
+        system( "start \"\" \"#{$local_path}/#{$nav}/#{$file}\"" )  
+      when 'start_file_wait'
+        system( "start \"\" /wait \"#{$local_path}/#{$nav}/#{$file}\"" )
+      when 'svn_lock'
+        system ( "svn lock #{$svn_path}/#{$encoded_file}")
+      when 'svn_unlock'
+        system ( "svn unlock #{$svn_path}/#{$encoded_file}") 
+      when 'svn_unlock_force'
+        system ( "svn unlock --force #{$svn_path}/#{$encoded_file}")
+      when 'svn_commit'
+        commit_message = 'Edited online using podium editor'
+        system( "svn commit -m \"#{commit_message}\" \"#{$local_path}/#{$nav}/#{$file}\"" )
+    end    
+  end
+
   # Checkout the svn file and move to edit method
   def checkout
     $nav = SecureRandom.random_number
     Dir.chdir("#{$local_path}") do
-      system ( "svn co --depth=empty #{$svn_path} #{$nav} & cd #{$nav} & svn up \"#{$file}\"" )
+      svn_command('svn_checkout')
       lock
     end
     edit_file
@@ -121,16 +142,16 @@ class OnlineEdit
   def read_only_checkout
     $nav = SecureRandom.random_number
     Dir.chdir("#{$local_path}") do
-      system ( "svn co --depth=empty #{$svn_path} #{$nav} & cd #{$nav} & svn up \"#{$file}\"" )
+      svn_command('svn_checkout')
     end
-    system( "start \"\" \"#{$local_path}/#{$nav}/#{$file}\"" )  
+    svn_command('start_file_exit')
     exit
   end
 
   # Edit the file by opening the file in the default editor and check for changes in the file
   def edit_file
     before = File.mtime("#{$local_path}/#{$nav}/#{$file}")
-    system( "start \"\" /wait \"#{$local_path}/#{$nav}/#{$file}\"" )
+    svn_command('start_file_wait')
     after = File.mtime("#{$local_path}/#{$nav}/#{$file}")
     unlock
     if before != after
@@ -147,31 +168,30 @@ class OnlineEdit
     if check_locked == "O" #File already locked 
       run_options
     else
-      system ( "svn lock #{$svn_path}/#{$encoded_file}")
+      svn_command('svn_lock')
     end
   end
 
   # Unlock file method, used after users input. This will run at the end of the program at any cost 
   def unlock
-    system ( "svn unlock #{$svn_path}/#{$encoded_file}")
+    svn_command('svn_unlock')
   end
 
   # Used only if the user selects force unlock from the UI and then it locks again for further editing
   def unlock_force
-    system ( "svn unlock --force #{$svn_path}/#{$encoded_file}")
+    svn_command('svn_unlock_force')
     lock_again
   end
 
   # Used only when force unlock is selected. Locks the file again and edits the file
   def lock_again
-    system ( "svn lock #{$svn_path}/#{$encoded_file}")
+    svn_command('svn_lock')
     edit_file
   end
 
   # After changes found in the file the file is committed with a default message
   def commit
-    default_message = 'Edited online using podium editor'
-    system( "svn commit -m \"#{default_message}\" \"#{$local_path}/#{$nav}/#{$file}\"" )
+    svn_command('svn_commit')
   end
 
   # Temp folder and file should be deleted on program exit
@@ -200,5 +220,4 @@ init.start unless defined?(Ocra)
 # TO DO: 
 # Add ensure for all the methods which needs to be executed during the program exit
 # DRY the code 
-# Make seperate method for all system commands
-
+# Fix read only checkout it is checking out twice
