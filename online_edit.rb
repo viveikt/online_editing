@@ -43,23 +43,28 @@ class DialogBox < FXMainWindow
 
   # Open the file as read only
   def read_only(sender, sel, ptr)
-    debugger
-    self.close
-    ro = OnlineEdit.new(ARGV[1].to_s,ARGV[2].to_s)
-    ro.read_only_checkout
-    exit
+    construct('read_only')
   end
 
   # Open file by unlocking first
   def force_unlock(sender, sel, ptr)
-    self.close
-    force_ulk = OnlineEdit.new(ARGV[1].to_s,ARGV[2].to_s)
-    force_ulk.unlock_force
-    exit
+    construct('force_unlock')
   end
 
   # Cancel button which terminates the program
   def cancel_button(sender, sel, ptr)
+    exit
+  end
+
+  # Build class
+  def construct(args)
+    self.close
+    init = OnlineEdit.new(ARGV[1].to_s,ARGV[2].to_s)
+    if args == 'read_only'
+      init.read_only_checkout
+    elsif args == 'force_unlock'
+      init.unlock_force
+    end
     exit
   end
 
@@ -73,7 +78,6 @@ end
 
 class OnlineEdit
   def start
-    debugger
     create_tmp_dir
   end
 
@@ -164,7 +168,7 @@ class OnlineEdit
   # After changes found in the file the file is committed with a default message
   def commit
     system ( "svn unlock #{$svn_path}/#{$file}")
-    default_message = 'default message'
+    default_message = 'Edited online using podium editor'
     system( "svn commit -m \"#{default_message}\" \"#{$local_path}/#{$nav}/#{$file}\"" )
     remove_tmp_dir
   end
@@ -194,5 +198,5 @@ init.start unless defined?(Ocra)
 # TO DO: 
 # Add ensure for all the methods which needs to be executed during the program exit
 # Use encapsulation (private/public/protected) use it like symbols --> private :this_is_private, :this_is_also_private 
-# Use nested class instead of 2 different class
+# Use nested class instead of 2 different class or use modules
 
