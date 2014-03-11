@@ -140,10 +140,6 @@ class OnlineEdit
 
   # This method is used only if the user selects read only if the file was locked
   def read_only_checkout
-    $nav = SecureRandom.random_number
-    Dir.chdir("#{$local_path}") do
-      svn_command('svn_checkout')
-    end
     svn_command('start_file_exit')
     exit
   end
@@ -211,13 +207,10 @@ class OnlineEdit
     application.run
   end
 
-  private :create_tmp_dir, :checkout , :edit_file , :lock , :unlock , :lock_again , :commit, :run_options
+  private :create_tmp_dir, :checkout , :edit_file , :lock , :unlock , :lock_again , :commit, :run_options, :svn_command
 end
 
 init = OnlineEdit.new(ARGV[1].to_s,ARGV[2].to_s)
 init.start unless defined?(Ocra)
 
-# TO DO: 
-# Add ensure for all the methods which needs to be executed during the program exit
-# DRY the code 
-# Fix read only checkout it is checking out twice
+ 
