@@ -8,8 +8,6 @@ require 'open3'
 require 'fox16'
 include Fox
 
-require 'debugger'
-
 class DialogBox < FXMainWindow
   def initialize(app)
     super(app, "Podium Online Editing", :opts => DECOR_ALL, :width => 1200, :height => 100)
@@ -115,7 +113,23 @@ class OnlineEdit
       when 'start_file_exit'
         system( "start \"\" \"#{$local_path}/#{$nav}/#{$file}\"" )  
       when 'start_file_wait'
-        system( "start \"\" /wait \"#{$local_path}/#{$nav}/#{$file}\"" )
+        ms_office_product = ['doc','docx','ppt','pptx','xls','xlsx']
+        file_type = $file.split('.').last
+        if ms_office_product.include? file_type
+          file_path = "#{$local_path}/#{$nav}/#{$file}".gsub('/','\\') #check for threats using gsub
+          search_office_path = `reg query "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\WINWORD.EXE"`
+          office_path = search_office_path.split('Path    REG_SZ').last.split('useURL').first.strip rescue false
+          if file_type.include? 'doc' || 'docx'
+            system( "start \"\" /wait \"#{office_path}\\WINWORD.EXE\" /w \"#{file_path}\"" ) if office_path != false
+          elsif file_type.include?'ppt' || 'pptx'
+            # Open in new instance still not working for PPT
+            system( "start \"\" /wait \"#{$local_path}/#{$nav}/#{$file}\"" ) 
+          elsif file_type.include? 'xls' || 'xlsx'
+            system( "start \"\" /wait \"#{office_path}\\EXCEL.EXE\" \"#{file_path}\"" ) if office_path != false    
+          end
+        else
+          system( "start \"\" /wait \"#{$local_path}/#{$nav}/#{$file}\"" )
+        end
       when 'svn_lock'
         system ( "svn lock #{$svn_path}/#{$encoded_file}")
       when 'svn_unlock'
